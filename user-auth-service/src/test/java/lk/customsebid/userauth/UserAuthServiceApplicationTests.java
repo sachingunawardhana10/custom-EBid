@@ -1,4 +1,4 @@
-package lk.customsebid.user_auth_service;
+package lk.customsebid.userauth;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
