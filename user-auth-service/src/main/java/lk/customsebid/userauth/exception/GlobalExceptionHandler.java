@@ -13,6 +13,8 @@ import java.util.Map;
 
 import org.springframework.security.core.AuthenticationException;
 
+import org.springframework.dao.OptimisticLockingFailureException;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -83,6 +85,28 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(
                 HttpStatus.UNAUTHORIZED,
                 "Invalid email or password, or account is not permitted to log in"
+        );
+    }
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleUserNotFound(
+            UserNotFoundException exception
+    ) {
+        return buildErrorResponse(
+                HttpStatus.NOT_FOUND,
+                exception.getMessage()
+        );
+    }
+
+
+    @ExceptionHandler(
+            org.springframework.dao.OptimisticLockingFailureException.class
+    )
+    public ResponseEntity<Map<String, Object>> handleOptimisticLockingFailure(
+            org.springframework.dao.OptimisticLockingFailureException exception
+    ) {
+        return buildErrorResponse(
+                HttpStatus.CONFLICT,
+                "This profile was modified by another request. Please refresh and try again."
         );
     }
 }

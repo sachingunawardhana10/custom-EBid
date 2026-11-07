@@ -20,6 +20,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -83,9 +86,18 @@ public class SecurityConfig {
                         UsernamePasswordAuthenticationFilter.class
                 )
 
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(
+                                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)
+                        )
+                )
+
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable());
 
+
+
         return http.build();
+
     }
 }
