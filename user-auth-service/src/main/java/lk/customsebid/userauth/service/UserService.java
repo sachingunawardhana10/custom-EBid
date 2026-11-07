@@ -14,6 +14,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Locale;
 
+import lk.customsebid.userauth.dto.UserProfileResponse;
+import lk.customsebid.userauth.dto.UserProfileUpdateRequest;
+import lk.customsebid.userauth.exception.UserNotFoundException;
+
+import java.util.UUID;
+
 @Service
 public class UserService {
 
@@ -69,6 +75,82 @@ public class UserService {
                 UserRole.BIDDER,
                 savedUser.getStatus(),
                 savedUser.getCreatedAt()
+        );
+
+
+    }
+    @Transactional(readOnly = true)
+    public UserProfileResponse getMyProfile(String email) {
+
+        User user = findUserByEmail(email);
+
+        return mapToProfileResponse(user);
+    }
+
+
+    @Transactional
+    public UserProfileResponse updateMyProfile(
+            String email,
+            UserProfileUpdateRequest request
+    ) {
+
+        User user = findUserByEmail(email);
+
+        String normalizedPhone = request.phone() == null
+                || request.phone().isBlank()
+                ? null
+                : request.phone().trim();
+
+        user.updateProfile(
+                request.firstName().trim(),
+                request.lastName().trim(),
+                normalizedPhone
+        );
+
+        return mapToProfileResponse(user);
+    }
+
+
+    @Transactional(readOnly = true)
+    public UserProfileResponse getUserProfile(UUID userId) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "User not found"
+                        )
+                );
+
+        return mapToProfileResponse(user);
+    }
+
+
+    private User findUserByEmail(String email) {
+
+        String normalizedEmail = email.trim()
+                .toLowerCase(Locale.ROOT);
+
+        return userRepository.findByEmail(normalizedEmail)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "User not found"
+                        )
+                );
+    }
+
+
+    private UserProfileResponse mapToProfileResponse(User user) {
+
+        return new UserProfileResponse(
+                user.getId(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getEmail(),
+                user.getPhone(),
+                user.getRole(),
+                user.getStatus(),
+                user.getCreatedAt(),
+                user.getUpdatedAt()
         );
     }
 }
