@@ -20,6 +20,12 @@ import lk.customsebid.userauth.exception.UserNotFoundException;
 
 import java.util.UUID;
 
+import lk.customsebid.userauth.dto.ChangePasswordRequest;
+import lk.customsebid.userauth.exception.PasswordChangeException;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class UserService {
 
@@ -152,5 +158,96 @@ public class UserService {
                 user.getCreatedAt(),
                 user.getUpdatedAt()
         );
+    }
+
+    @Transactional
+    public void changePassword(
+            String email,
+            ChangePasswordRequest request
+    ) {
+        User user = findUserByEmail(email);
+
+        // Verify the existing password.
+        if (!passwordEncoder.matches(
+                request.currentPassword(),
+                user.getPasswordHash()
+        )) {
+            throw new PasswordChangeException(
+                    "Current password is incorrect"
+            );
+        }
+
+        // Confirm that both new-password fields match.
+        if (!request.newPassword().equals(request.confirmNewPassword())) {
+            throw new PasswordChangeException(
+                    "New password and confirmation do not match"
+            );
+        }
+
+        // Prevent reuse of the current password.
+        if (passwordEncoder.matches(
+                request.newPassword(),
+                user.getPasswordHash()
+        )) {
+            throw new PasswordChangeException(
+                    "New password must be different from the current password"
+            );
+        }
+
+        // Hash the new password and increment credential version.
+        String newPasswordHash =
+                passwordEncoder.encode(request.newPassword());
+
+        user.changePassword(newPasswordHash);
+    }
+
+    @Transactional(readOnly = true)
+    public List<UserProfileResponse> getAllUsers() {
+
+        return userRepository.findAll()
+                .stream()
+                .map(this::mapToProfileResponse)
+                .collect(Collectors.toList());
+    }
+
+
+    @Transactional(readOnly = true)
+    public UserProfileResponse getUserById(UUID userId) {
+
+        return getUserProfile(userId);
+    }
+
+
+    @Transactional
+    public UserProfileResponse updateUserStatus(
+            UUID userId,
+            UserStatus status
+    ) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new UserNotFoundException("User not found")
+                );
+
+        user.changeStatus(status);
+
+        return mapToProfileResponse(user);
+    }
+
+
+    @Transactional
+    public UserProfileResponse updateUserRole(
+            UUID userId,
+            UserRole role
+    ) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new UserNotFoundException("User not found")
+                );
+
+        user.changeRole(role);
+
+        return mapToProfileResponse(user);
     }
 }

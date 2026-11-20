@@ -6,6 +6,8 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
+import lk.customsebid.userauth.security.CustomUserDetails;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -25,10 +27,20 @@ public class JwtService {
 
     public String generateToken(UserDetails userDetails) {
 
+        if (!(userDetails instanceof CustomUserDetails customUser)) {
+            throw new IllegalArgumentException(
+                    "CustomUserDetails is required to generate a token"
+            );
+        }
+
         Instant now = Instant.now();
 
         return Jwts.builder()
                 .subject(userDetails.getUsername())
+                .claim(
+                        "credentialVersion",
+                        customUser.getCredentialVersion()
+                )
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plusMillis(expirationMs)))
                 .signWith(getSigningKey())
@@ -49,8 +61,18 @@ public class JwtService {
             String username = claims.getSubject();
             Date expiration = claims.getExpiration();
 
+            Number tokenVersion =
+                    claims.get("credentialVersion", Number.class);
+
+            if (!(userDetails instanceof CustomUserDetails customUser)
+                    || tokenVersion == null) {
+                return false;
+            }
+
             return username.equals(userDetails.getUsername())
                     && expiration.after(new Date())
+                    && tokenVersion.longValue()
+                    == customUser.getCredentialVersion()
                     && userDetails.isEnabled()
                     && userDetails.isAccountNonLocked();
 

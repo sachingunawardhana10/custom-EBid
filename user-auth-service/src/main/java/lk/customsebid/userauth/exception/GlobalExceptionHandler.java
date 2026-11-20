@@ -15,6 +15,8 @@ import org.springframework.security.core.AuthenticationException;
 
 import org.springframework.dao.OptimisticLockingFailureException;
 
+import lk.customsebid.userauth.exception.PasswordChangeException;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -107,6 +109,15 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(
                 HttpStatus.CONFLICT,
                 "This profile was modified by another request. Please refresh and try again."
+        );
+    }
+    @ExceptionHandler(PasswordChangeException.class)
+    public ResponseEntity<Map<String, Object>> handlePasswordChange(
+            PasswordChangeException exception
+    ) {
+        return buildErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                exception.getMessage()
         );
     }
 }
