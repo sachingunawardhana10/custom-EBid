@@ -1,8 +1,8 @@
 package lk.customsebid.userauth.service;
 
 import lk.customsebid.userauth.entity.User;
-import lk.customsebid.userauth.entity.UserStatus;
 import lk.customsebid.userauth.repository.UserRepository;
+import lk.customsebid.userauth.security.CustomUserDetails;
 
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -33,15 +33,6 @@ public class CustomUserDetailsService implements UserDetailsService {
                         )
                 );
 
-        boolean isInactive = user.getStatus() == UserStatus.INACTIVE;
-        boolean isSuspended = user.getStatus() == UserStatus.SUSPENDED;
-
-        return org.springframework.security.core.userdetails.User
-                .withUsername(user.getEmail())
-                .password(user.getPasswordHash())
-                .authorities("ROLE_" + user.getRole().name())
-                .disabled(isInactive)
-                .accountLocked(isSuspended)
-                .build();
+        return new CustomUserDetails(user);
     }
 }

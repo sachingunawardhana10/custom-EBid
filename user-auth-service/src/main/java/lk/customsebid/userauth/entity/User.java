@@ -75,6 +75,9 @@ public class User {
     @Version
     private long version;
 
+    @Column(name = "credential_version", nullable = false)
+    private long credentialVersion = 0;
+
     protected User() {
         // Required by JPA.
     }
@@ -107,7 +110,22 @@ public class User {
         if (status == null) {
             throw new IllegalArgumentException("Status cannot be null");
         }
-        this.status = status;
+
+        if (this.status != status) {
+            this.status = status;
+            this.credentialVersion++;
+        }
+    }
+
+    public void changeRole(UserRole role) {
+        if (role == null) {
+            throw new IllegalArgumentException("Role cannot be null");
+        }
+
+        if (this.role != role) {
+            this.role = role;
+            this.credentialVersion++;
+        }
     }
 
     public UUID getId() {
@@ -152,6 +170,19 @@ public class User {
 
     public long getVersion() {
         return version;
+    }
+
+    public void changePassword(String newPasswordHash) {
+        if (newPasswordHash == null || newPasswordHash.isBlank()) {
+            throw new IllegalArgumentException("Password hash cannot be blank");
+        }
+
+        this.passwordHash = newPasswordHash;
+        this.credentialVersion++;
+    }
+
+    public long getCredentialVersion() {
+        return credentialVersion;
     }
 
     @jakarta.persistence.PrePersist
