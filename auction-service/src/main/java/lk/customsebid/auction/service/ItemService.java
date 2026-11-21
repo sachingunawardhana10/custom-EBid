@@ -1,5 +1,7 @@
 package lk.customsebid.auction.service;
 
+import lk.customsebid.auction.dto.ItemRequest;
+import lk.customsebid.auction.dto.ItemResponse;
 import lk.customsebid.auction.entity.Item;
 import lk.customsebid.auction.enums.ItemStatus;
 import lk.customsebid.auction.repository.ItemRepository;
@@ -19,47 +21,82 @@ public class ItemService {
         this.itemRepository = itemRepository;
     }
 
+    // Convert Item entity into ItemResponse DTO
+    private ItemResponse convertToResponse(Item item) {
+
+        return new ItemResponse(
+                item.getId(),
+                item.getTitle(),
+                item.getDescription(),
+                item.getCategory(),
+                item.getCondition(),
+                item.getStartingPrice(),
+                item.getStatus(),
+                item.getCreatedAt(),
+                item.getUpdatedAt()
+        );
+    }
+
     // Create a new item
-    public Item createItem(Item item) {
-        item.setId(null);
+    public ItemResponse createItem(ItemRequest request) {
+
+        Item item = new Item();
+
+        item.setTitle(request.getTitle());
+        item.setDescription(request.getDescription());
+        item.setCategory(request.getCategory());
+        item.setCondition(request.getCondition());
+        item.setStartingPrice(request.getStartingPrice());
         item.setStatus(ItemStatus.AVAILABLE);
 
-        return itemRepository.save(item);
+        Item savedItem = itemRepository.save(item);
+
+        return convertToResponse(savedItem);
     }
 
     // Retrieve all items
-    public List<Item> getAllItems() {
-        return itemRepository.findAll();
+    public List<ItemResponse> getAllItems() {
+
+        return itemRepository.findAll()
+                .stream()
+                .map(this::convertToResponse)
+                .toList();
     }
 
     // Retrieve an item by UUID
-    public Optional<Item> getItemById(UUID id) {
-        return itemRepository.findById(id);
+    public Optional<ItemResponse> getItemById(UUID id) {
+
+        return itemRepository.findById(id)
+                .map(this::convertToResponse);
     }
 
     // Update an existing item
-    public Optional<Item> updateItem(UUID id, Item updatedItem) {
+    public Optional<ItemResponse> updateItem(UUID id, ItemRequest request) {
 
         return itemRepository.findById(id).map(existingItem -> {
 
-            existingItem.setTitle(updatedItem.getTitle());
-            existingItem.setDescription(updatedItem.getDescription());
-            existingItem.setCategory(updatedItem.getCategory());
-            existingItem.setCondition(updatedItem.getCondition());
-            existingItem.setStartingPrice(updatedItem.getStartingPrice());
+            existingItem.setTitle(request.getTitle());
+            existingItem.setDescription(request.getDescription());
+            existingItem.setCategory(request.getCategory());
+            existingItem.setCondition(request.getCondition());
+            existingItem.setStartingPrice(request.getStartingPrice());
 
-            return itemRepository.save(existingItem);
+            Item savedItem = itemRepository.save(existingItem);
+
+            return convertToResponse(savedItem);
         });
     }
 
     // Deactivate an item instead of permanently deleting it
-    public Optional<Item> deleteItem(UUID id) {
+    public Optional<ItemResponse> deleteItem(UUID id) {
 
         return itemRepository.findById(id).map(existingItem -> {
 
             existingItem.setStatus(ItemStatus.INACTIVE);
 
-            return itemRepository.save(existingItem);
+            Item savedItem = itemRepository.save(existingItem);
+
+            return convertToResponse(savedItem);
         });
     }
 }
