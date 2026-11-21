@@ -4,6 +4,7 @@ import lk.customsebid.auction.dto.ItemRequest;
 import lk.customsebid.auction.dto.ItemResponse;
 import lk.customsebid.auction.entity.Item;
 import lk.customsebid.auction.enums.ItemStatus;
+import lk.customsebid.auction.exception.ItemOperationException;
 import lk.customsebid.auction.repository.ItemRepository;
 
 import org.springframework.stereotype.Service;
@@ -75,6 +76,14 @@ public class ItemService {
 
         return itemRepository.findById(id).map(existingItem -> {
 
+            // Only AVAILABLE items can be updated
+            if (existingItem.getStatus() != ItemStatus.AVAILABLE) {
+                throw new ItemOperationException(
+                        "Only AVAILABLE items can be updated. Current status: "
+                                + existingItem.getStatus()
+                );
+            }
+
             existingItem.setTitle(request.getTitle());
             existingItem.setDescription(request.getDescription());
             existingItem.setCategory(request.getCategory());
@@ -91,6 +100,14 @@ public class ItemService {
     public Optional<ItemResponse> deleteItem(UUID id) {
 
         return itemRepository.findById(id).map(existingItem -> {
+
+            // Only AVAILABLE items can be deactivated
+            if (existingItem.getStatus() != ItemStatus.AVAILABLE) {
+                throw new ItemOperationException(
+                        "Only AVAILABLE items can be deactivated. Current status: "
+                                + existingItem.getStatus()
+                );
+            }
 
             existingItem.setStatus(ItemStatus.INACTIVE);
 

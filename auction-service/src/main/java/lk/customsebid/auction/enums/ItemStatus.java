@@ -1,4 +1,4 @@
-package main.java.lk.customsebid.auction.enums;
+package lk.customsebid.auction.enums;
 
 public enum ItemStatus {
 
