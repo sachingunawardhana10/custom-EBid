@@ -5,12 +5,12 @@ import lk.customsebid.auction.dto.ItemResponse;
 import lk.customsebid.auction.entity.Item;
 import lk.customsebid.auction.enums.ItemStatus;
 import lk.customsebid.auction.exception.ItemOperationException;
+import lk.customsebid.auction.exception.ItemNotFoundException;
 import lk.customsebid.auction.repository.ItemRepository;
 
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -65,55 +65,63 @@ public class ItemService {
     }
 
     // Retrieve an item by UUID
-    public Optional<ItemResponse> getItemById(UUID id) {
+    public ItemResponse getItemById(UUID id) {
 
-        return itemRepository.findById(id)
-                .map(this::convertToResponse);
+        Item item = itemRepository.findById(id)
+                .orElseThrow(() -> new ItemNotFoundException(
+                        "Item not found with ID: " + id
+                ));
+
+        return convertToResponse(item);
     }
 
     // Update an existing item
-    public Optional<ItemResponse> updateItem(UUID id, ItemRequest request) {
+    public ItemResponse updateItem(UUID id, ItemRequest request) {
 
-        return itemRepository.findById(id).map(existingItem -> {
+        Item existingItem = itemRepository.findById(id)
+                .orElseThrow(() -> new ItemNotFoundException(
+                        "Item not found with ID: " + id
+                ));
 
-            // Only AVAILABLE items can be updated
-            if (existingItem.getStatus() != ItemStatus.AVAILABLE) {
-                throw new ItemOperationException(
-                        "Only AVAILABLE items can be updated. Current status: "
-                                + existingItem.getStatus()
-                );
-            }
+        // Only AVAILABLE items can be updated
+        if (existingItem.getStatus() != ItemStatus.AVAILABLE) {
+            throw new ItemOperationException(
+                    "Only AVAILABLE items can be updated. Current status: "
+                            + existingItem.getStatus()
+            );
+        }
 
-            existingItem.setTitle(request.getTitle());
-            existingItem.setDescription(request.getDescription());
-            existingItem.setCategory(request.getCategory());
-            existingItem.setCondition(request.getCondition());
-            existingItem.setStartingPrice(request.getStartingPrice());
+        existingItem.setTitle(request.getTitle());
+        existingItem.setDescription(request.getDescription());
+        existingItem.setCategory(request.getCategory());
+        existingItem.setCondition(request.getCondition());
+        existingItem.setStartingPrice(request.getStartingPrice());
 
-            Item savedItem = itemRepository.save(existingItem);
+        Item savedItem = itemRepository.save(existingItem);
 
-            return convertToResponse(savedItem);
-        });
+        return convertToResponse(savedItem);
     }
 
     // Deactivate an item instead of permanently deleting it
-    public Optional<ItemResponse> deleteItem(UUID id) {
+    public ItemResponse deleteItem(UUID id) {
 
-        return itemRepository.findById(id).map(existingItem -> {
+        Item existingItem = itemRepository.findById(id)
+                .orElseThrow(() -> new ItemNotFoundException(
+                        "Item not found with ID: " + id
+                ));
 
-            // Only AVAILABLE items can be deactivated
-            if (existingItem.getStatus() != ItemStatus.AVAILABLE) {
-                throw new ItemOperationException(
-                        "Only AVAILABLE items can be deactivated. Current status: "
-                                + existingItem.getStatus()
-                );
-            }
+        // Only AVAILABLE items can be deactivated
+        if (existingItem.getStatus() != ItemStatus.AVAILABLE) {
+            throw new ItemOperationException(
+                    "Only AVAILABLE items can be deactivated. Current status: "
+                            + existingItem.getStatus()
+            );
+        }
 
-            existingItem.setStatus(ItemStatus.INACTIVE);
+        existingItem.setStatus(ItemStatus.INACTIVE);
 
-            Item savedItem = itemRepository.save(existingItem);
+        Item savedItem = itemRepository.save(existingItem);
 
-            return convertToResponse(savedItem);
-        });
+        return convertToResponse(savedItem);
     }
 }

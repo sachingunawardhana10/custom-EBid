@@ -44,14 +44,14 @@ public class ItemController {
         return ResponseEntity.ok(items);
     }
 
-    // Retrieve an item by ID
+    // Retrieve an item by UUID
     @GetMapping("/{id}")
     public ResponseEntity<ItemResponse> getItemById(
             @PathVariable UUID id) {
 
-        return itemService.getItemById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        ItemResponse item = itemService.getItemById(id);
+
+        return ResponseEntity.ok(item);
     }
 
     // Update an existing item
@@ -60,9 +60,9 @@ public class ItemController {
             @PathVariable UUID id,
             @Valid @RequestBody ItemRequest request) {
 
-        return itemService.updateItem(id, request)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        ItemResponse updatedItem = itemService.updateItem(id, request);
+
+        return ResponseEntity.ok(updatedItem);
     }
 
     // Deactivate an item
@@ -70,8 +70,8 @@ public class ItemController {
     public ResponseEntity<ItemResponse> deleteItem(
             @PathVariable UUID id) {
 
-        return itemService.deleteItem(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        ItemResponse deletedItem = itemService.deleteItem(id);
+
+        return ResponseEntity.ok(deletedItem);
     }
 }
