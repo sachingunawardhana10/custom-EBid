@@ -9,6 +9,8 @@ import lk.customsebid.payment.repository.PaymentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 public class PaymentService {
 
@@ -35,5 +37,12 @@ public class PaymentService {
 
         Payment saved = paymentRepository.save(payment);
         return PaymentResponse.from(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public PaymentResponse getPaymentById(UUID id) {
+        Payment payment = paymentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Payment not found"));
+        return PaymentResponse.from(payment);
     }
 }
