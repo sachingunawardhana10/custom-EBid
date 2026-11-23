@@ -5,6 +5,7 @@ import lk.customsebid.payment.dto.PaymentResponse;
 import lk.customsebid.payment.entity.Payment;
 import lk.customsebid.payment.entity.PaymentMethod;
 import lk.customsebid.payment.entity.PaymentStatus;
+import lk.customsebid.payment.exception.PaymentNotFoundException;
 import lk.customsebid.payment.repository.PaymentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,7 +43,7 @@ public class PaymentService {
     @Transactional(readOnly = true)
     public PaymentResponse getPaymentById(UUID id) {
         Payment payment = paymentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Payment not found"));
+                .orElseThrow(() -> new PaymentNotFoundException("Payment not found: " + id));
         return PaymentResponse.from(payment);
     }
 }
